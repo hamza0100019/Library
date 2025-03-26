@@ -48,6 +48,8 @@ class ReservationController extends Controller
             'etat' => 'en_attente',
         ]);
 
+
+        $livre->update(['disponible' => false]);
         $this->sendReservationEmail($reservation);
 
         return redirect()->route('reservations.index')->with('success', 'Réservation créée avec succès. En attente de validation.');

@@ -95,5 +95,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
 Auth::routes();
 
 /* Route pour la page d'accueil des utilisateurs connectés.
-   Utilise HomeController pour afficher la vue appropriée. */
+  . */
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

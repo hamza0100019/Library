@@ -150,8 +150,9 @@ class LivreController extends Controller
             $query->where('disponible', $request->disponibilite);
         }
 
-        // Pagination
+
         $livres = $query->paginate(6);
+
 
         // Récupérer les catégories pour les filtres
         $categories = Categorie::all();
