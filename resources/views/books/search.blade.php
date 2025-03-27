@@ -3,121 +3,96 @@
 @section('title', 'Rechercher un Livre')
 
 @section('content')
+
+@php
+    if (!isset($livres)) {
+        $livres = \App\Models\Livre::orderBy('created_at', 'desc')->take(9)->get();
+    }
+@endphp
+
 <div class="container py-5 min-vh-100">
-    <!-- Titre principal -->
+    <!-- Titre -->
     <div class="text-center mb-5">
-        <h1 class="fw-bold" style="color: #264653; font-size: 2.5rem;">Rechercher un Livre</h1>
-        <p class="text-muted" style="font-size: 1.2rem;">Trouvez le livre que vous recherchez en saisissant un titre, un auteur ou une description, et appliquez des filtres pour affiner votre recherche.</p>
+        <h1 class="fw-bold display-5" style="color: #264653;">📚 Explorer la Bibliothèque</h1>
+        <p class="text-muted fs-5">Recherchez un livre ou découvrez nos dernières sélections</p>
     </div>
 
-    <!-- Formulaire de recherche -->
-    <div class="row justify-content-center">
+    <!-- Barre de recherche -->
+    <div class="row justify-content-center mb-5">
         <div class="col-lg-8">
-            <form action="{{ route('books.search') }}" method="GET">
-                <!-- Barre de recherche -->
-                <div class="input-group mb-4 shadow-sm">
-                    <input
-                        type="text"
-                        name="query"
-                        class="form-control form-control-lg"
-                        placeholder="Rechercher un livre..."
-                        value="{{ request('query') }}"
-                        style="border-color: #264653; font-size: 1.1rem;">
-                    <button type="submit" class="btn btn-primary btn-lg" style="background-color: #E76F51; border-color: #E76F51;">
-                        <i class="bi bi-search"></i> Rechercher
-                    </button>
-                </div>
-
-                <!-- Filtres -->
-                <div class="row">
-                    <!-- Filtrer par catégorie -->
-                    <div class="col-md-4 mb-3">
-                        <select name="categorie" class="form-select">
-                            <option value="">Toutes les catégories</option>
-                            @foreach($categories as $categorie)
-                                <option value="{{ $categorie->id }}" {{ request('categorie') == $categorie->id ? 'selected' : '' }}>
-                                    {{ $categorie->nom }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Filtrer par année -->
-                    <div class="col-md-4 mb-3">
-                        <select name="annee" class="form-select">
-                            <option value="">Toutes les années</option>
-                            @foreach(range(date('Y'), 1900) as $annee)
-                                <option value="{{ $annee }}" {{ request('annee') == $annee ? 'selected' : '' }}>
-                                    {{ $annee }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Filtrer par disponibilité -->
-                    <div class="col-md-4 mb-3">
-                        <select name="disponibilite" class="form-select">
-                            <option value="">Tous les états</option>
-                            <option value="1" {{ request('disponibilite') == '1' ? 'selected' : '' }}>Disponible</option>
-                            <option value="0" {{ request('disponibilite') == '0' ? 'selected' : '' }}>Non disponible</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-secondary w-100 mt-3">Appliquer les Filtres</button>
+            <form action="{{ route('books.search') }}" method="GET" class="input-group shadow-lg">
+                <input
+                    type="text"
+                    name="query"
+                    class="form-control form-control-lg rounded-start"
+                    placeholder="Titre, auteur, description..."
+                    value="{{ request('query') }}"
+                    style="font-size: 1.1rem; border: 2px solid #264653;">
+                <button type="submit" class="btn btn-lg rounded-end" style="background-color: #2563EB; color: white;">
+                    <i class="bi bi-search"></i>
+                </button>
             </form>
         </div>
     </div>
 
-    <!-- Résultats de la recherche -->
-    @if(isset($livres) && $livres->isNotEmpty())
-    <div class="row mt-4">
+    <!-- Affichage des livres -->
+    @if($livres->isNotEmpty())
+    <h3 class="mb-4 fw-semibold" style="color: #264653;">
+        {{ request('query') ? '🔍 Résultats de votre recherche' : '✨ Livres récents dans la bibliothèque' }}
+    </h3>
+    @if(session('success'))
+    <div class="alert alert-success text-center mt-3">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger text-center mt-3">
+        {{ session('error') }}
+    </div>
+@endif
+
+@if(session('exist'))
+    <div class="alert alert-warning text-center mt-3">
+        {{ session('exist') }}
+    </div>
+@endif
+
+    <div class="row g-4">
         @foreach($livres as $livre)
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card shadow-sm h-100 border-0" style="border-radius: 15px;">
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm book-card position-relative overflow-hidden">
                 <!-- Image -->
                 @if($livre->image)
-                <img src="{{ asset('storage/' . $livre->image) }}" alt="{{ $livre->titre }}" class="card-img-top" style="height: 200px; object-fit: cover; border-top-left-radius: 15px; border-top-right-radius: 15px;">
+                <img src="{{ asset('storage/' . $livre->image) }}" alt="{{ $livre->titre }}"
+                     class="card-img-top book-img">
                 @endif
+
+                <!-- Badge Disponibilité -->
+                <span class="position-absolute top-0 end-0 m-2 badge 
+                    {{ $livre->disponible ? 'bg-success' : 'bg-danger' }}">
+                    {{ $livre->disponible ? 'Disponible' : 'Indisponible' }}
+                </span>
+
+                <!-- Contenu -->
                 <div class="card-body d-flex flex-column justify-content-between">
-                    <!-- Titre -->
                     <div>
-                        <h5 class="card-title fw-bold mb-3" style="color: #264653; font-size: 1.5rem;">
-                            {{ $livre->titre }}
-                        </h5>
-                        <!-- Auteur -->
-                        <p class="text-muted mb-2" style="font-size: 1rem;">
-                            <i class="bi bi-person" style="color: #E76F51;"></i> {{ $livre->auteur }}
-                        </p>
-                        <!-- Catégorie -->
-                        <p class="text-muted mb-2" style="font-size: 1rem;">
-                            <i class="bi bi-folder" style="color: #E76F51;"></i> {{ $livre->categorie->nom ?? 'Non catégorisé' }}
-                        </p>
-                        <!-- Disponibilité -->
-                        <p class="text-muted mb-3" style="font-size: 1rem;">
-                            <i class="bi {{ $livre->disponible ? 'bi-check-circle' : 'bi-x-circle' }}" style="color: {{ $livre->disponible ? '#28a745' : '#dc3545' }};"></i>
-                            {{ $livre->disponible ? 'Disponible' : 'Non disponible' }}
-                        </p>
-                        <!-- Description -->
-                        <p class="card-text mb-3" style="font-size: 0.95rem; color: #555;">
-                            {{ \Illuminate\Support\Str::limit($livre->description, 120) }}
+                        <h5 class="card-title fw-bold text-dark">{{ $livre->titre }}</h5>
+                        <p class="mb-1 text-muted"><i class="bi bi-person me-1 text-primary-blue"></i> {{ $livre->auteur }}</p>
+                        <p class="mb-2 text-muted"><i class="bi bi-folder me-1 text-primary-blue"></i> {{ $livre->categorie->nom ?? 'Non catégorisé' }}</p>
+                        <p class="card-text small" style="color: #555;">
+                            {{ \Illuminate\Support\Str::limit($livre->description, 100) }}
                         </p>
                     </div>
-                    <!-- Bouton -->
-                    <div>
-
-                        @if ($livre->disponible)
-                            <a href="{{route('tobook.index', $livre->id)}}" class="btn w-100" style="background-color: #E76F51; border-color: #E76F51; color: white; font-weight: bold; font-size: 1rem; border-radius: 10px;">
-                                Réserver
-                            </a>
+                    <div class="mt-3">
+                        @if($livre->disponible)
+                            <form action="{{ route('tobook.create', $livre->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn w-100 btn-custom" style="background-color: #2563EB; color: white;">📖 Réserver</button>
+                            </form>
+                        @else
+                            <a href="{{ route('tobook.index', $livre->id) }}" class="btn w-100 btn-custom" style="background-color: #2563EB; color: white;">👀 Voir Détails</a>
                         @endif
-
-                        @if (!$livre->disponible)
-                            <a href="#" class="btn w-100" style="background-color: #E76F51; border-color: #E76F51; color: white; font-weight: bold; font-size: 1rem; border-radius: 10px;">
-                                Voir Détails
-                            </a>
-                        @endif
-
                     </div>
                 </div>
             </div>
@@ -126,15 +101,59 @@
     </div>
 
     <!-- Pagination -->
-    <div class="mt-4">
+    @if(method_exists($livres, 'links'))
+    <div class="mt-5">
         {{ $livres->links() }}
     </div>
+    @endif
+
     @else
-        @if(isset($livres))
-        <div class="text-center mt-5">
-            <h5 class="text-muted" style="font-size: 1.1rem;">Aucun livre trouvé pour votre recherche.</h5>
-        </div>
-        @endif
+    <div class="text-center mt-5">
+        <h5 class="text-muted">Aucun livre trouvé pour cette recherche.</h5>
+    </div>
     @endif
 </div>
+
+<!-- Styles bleus -->
+<style>
+    .book-card {
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #ffffff, #f9f9f9);
+    }
+
+    .book-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+    }
+
+    .book-img {
+        height: 230px;
+        object-fit: cover;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+    }
+
+    .action-btn {
+        background-color: #2563EB;
+        color: white;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .action-btn:hover {
+        background-color: #1e4ed8;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .text-primary-blue {
+        color: #2563EB;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.5em 0.75em;
+        border-radius: 10px;
+    }
+</style>
 @endsection

@@ -26,34 +26,33 @@ class ReservationController extends Controller
     public function create(Request $request, $id)
     {
         $livre = Livre::findOrFail($id);
-
+    
         if (!$livre->disponible) {
             return redirect()->back()->with('error', 'Ce livre n\'est pas disponible pour réservation.');
         }
-
+    
         $existingReservation = Reservation::where('user_id', Auth::id())
             ->where('livre_id', $livre->id)
             ->whereIn('etat', ['en_attente', 'validée'])
             ->first();
-
+    
         if ($existingReservation) {
-            return redirect()->back()->with('exist', 'Vous avez déjà une réservation active.');
+            return redirect()->back()->with('exist', 'Vous avez déjà une réservation active pour ce livre.');
         }
-
-        $reservation = Reservation::create([
+    
+        Reservation::create([
             'user_id' => Auth::id(),
             'livre_id' => $id,
             'date_debut' => now(),
             'date_fin' => now()->addDays(7),
             'etat' => 'en_attente',
         ]);
-
-
+    
         $livre->update(['disponible' => false]);
-        $this->sendReservationEmail($reservation);
-
-        return redirect()->route('reservations.index')->with('success', 'Réservation créée avec succès. En attente de validation.');
+    
+        return redirect()->back()->with('success', '📚 Votre demande de réservation a bien été enregistrée ! Elle sera validée par l\'administration sous peu.');
     }
+    
 
     public function adminIndex()
     {
@@ -66,9 +65,6 @@ class ReservationController extends Controller
         $reservation = Reservation::findOrFail($id);
         $reservation->update(['etat' => $etat]);
 
-        if($etat === 'validee'){
-            $this->sendValidationEmail($reservation);
-        }
         return redirect()->route('admin.reservations')->with('success', 'État mis à jour avec succès.');
     }
 

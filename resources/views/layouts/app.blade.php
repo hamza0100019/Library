@@ -290,10 +290,10 @@
             border-bottom: none;
         }
 
-        .card-footer {
+        /* .card-footer {
             font-size: 0.9rem;
             background-color: #F8F9FA;
-        }
+        } */
 
         /* Input group */
         .input-group-text {
@@ -336,7 +336,7 @@
     <main class="container my-5">
         @yield('content')
     </main>
-    @include('partials.footer')
+   
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
